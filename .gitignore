@@ -1,0 +1,43 @@
+.config
+*.o
+*.pyc
+
+# gtags
+GTAGS
+GRTAGS
+GPATH
+
+# cache dir
+.cache/
+
+# Components Unit Test Apps files
+components
+#components/**/build/
+#components/**/build_*_*/
+#components/**/sdkconfig
+#components/**/sdkconfig.old
+
+# Example project files
+#examples/**/build/
+#examples/**/build_*_*/
+#examples/**/sdkconfig
+#examples/**/sdkconfig.old
+
+# Backup files
+backup/
+*.bak
+
+# Unimportant files
+sdkconfig.ci
+
+# VS Code Settings
+#.vscode/
+
+# ESP-IDF default build directory name
+build
+
+# lock files for examples and components
+dependencies.lock
+
+# managed_components for examples
+managed_components
