@@ -1,0 +1,49 @@
+# Ce fichier défini la séquence qui sera exécutée pour illuminer le sapin.
+# Tous les caractères après "#" sur une ligne sont ignorés.
+# Les lignes vides sont aussi ignorées.
+
+# Le premier nombre est une séquence de 8 chiffres, soit 0 (fermé) ou 1 (allumé).
+# Les 3 nombre suivant correspondent à l'intensité respectives : rouge, vert, bleu.
+#     - L'intensite 0=éteint, 100=100% allumé, 1-99=1% à 99% allumé. 
+# Le 4ième nombre représente un délai d'attente après avoir exécuté la commande, en msecs.
+
+
+#LUMIÈRE R  G  B   DÉLAI(ms)
+
+10000000 01 00 00  100
+01000000
+00100000
+00010000
+00001000
+00000100
+00000010
+00000001
+
+10000000 00 01 00  100
+01000000
+00100000
+00010000
+00001000
+00000100
+00000010
+00000001
+
+10000000 00 00 01  100
+01000000
+00100000
+00010000
+00001000
+00000100
+00000010
+00000001
+
+10000000 01 01 01  100
+01000000
+00100000
+00010000
+00001000
+00000100
+00000010
+00000001
+
+LOOP

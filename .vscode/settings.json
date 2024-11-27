@@ -10,6 +10,11 @@
   "files.associations": {
     ".fantomasignore": "ignore",
     "sdmmc_cmd.h": "c",
-    "ledc.h": "c"
+    "ledc.h": "c",
+    "string.h": "c",
+    "unistd.h": "c",
+    "regex": "cpp",
+    "iosfwd": "cpp",
+    "sstream": "cpp"
   }
 }

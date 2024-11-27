@@ -1,2 +1,2 @@
-idf_component_register(SRCS "XmasTree_main.c"
+idf_component_register(SRCS "SdCard.cpp" "XmasTree_main.c" "Deserializer.cpp" 
                     INCLUDE_DIRS ".")
