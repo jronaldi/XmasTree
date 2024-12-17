@@ -14,12 +14,42 @@
 
 static const char *TAG = TAG_NAME;
 
-struct sequenceCommand {
-    unsigned lightRows;     // 8-bits on/off state for each of the 8 levels lsb=lowest level)  
-    unsigned red;           // Luminosity (0-100%) of the red light.
-    unsigned green;         // Luminosity (0-100%) of the green light.
-    unsigned blue;          // Luminosity (0-100%) of the blue light.
-    unsigned delai;         // The delay wait time before executing the next command.
+enum LightShowCmdType {
+    Light,
+    Label,
+    Loop,
+    Wait,
+    Stop,
+    Call,
+    Return
+};
+
+const char LabelMarker = ':';
+extern const char* LoopMarker;
+extern const char* WaitMarker;
+
+struct LightShowCommand {
+    enum LightShowCmdType stepType;
+    union {
+        struct {
+            unsigned lightRows;     // 8-bits on/off state for each of the 8 levels lsb=lowest level)  
+            unsigned red;           // Luminosity (0-100%) of the red light.
+            unsigned green;         // Luminosity (0-100%) of the green light.
+            unsigned blue;          // Luminosity (0-100%) of the blue light.
+            unsigned delay;         // Delay before moving to the next step.
+        } LightStep;
+        struct {
+            unsigned idLabel;
+        } Label;
+        struct {
+            unsigned idLabel;       // ID of label where to loop to.
+            unsigned count;         // Number of times to loop.
+            unsigned countdown;     // Looping countdown (remaining count).
+        } Loop;
+        struct {
+            unsigned delayMs;
+        } Wait;
+    };
 };
 
 // Fetch the customizable light-engine commands for the Xmas Tree driver

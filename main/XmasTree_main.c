@@ -8,6 +8,7 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 
+#include <esp_sleep.h>
 #include <string.h>
 #include <sys/unistd.h>
 #include <sys/stat.h>
@@ -45,4 +46,6 @@ void app_main(void)
 
 
     DeinitializeSdCard();
+    //esp_light_sleep_start();
+    while (true) ;
 }
