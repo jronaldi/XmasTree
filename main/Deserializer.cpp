@@ -322,14 +322,34 @@ const char *GetBinaryLights(unsigned lights, char buf[8])
     return buf;
 }
 
+int GetMaxPgmLength(FILE* seqFile)
+{
+    char buf[1024];
+    const char* pCurChar;
+    int lineNo = 0;
+
+    fseek(seqFile, 0L, SEEK_SET);   // Reset to beginning of the file
+
+    // Count all non-empty, non-comment lines
+    while (fgets(buf, sizeof(buf), seqFile) != NULL)
+    {
+        pCurChar = buf;
+        pCurChar = SkipBlanks(pCurChar);
+        if (*pCurChar && *pCurChar != '#') ++lineNo;
+    }
+
+    fseek(seqFile, 0L, SEEK_SET);   // Reset to beginning of the file
+
+    return lineNo;
+}
 
 // Fetch the customizable light-engine commands for the Xmas Tree driver
-esp_err_t LoadCommands()
+esp_err_t LoadCommands(void** rawLightShowPgm, int* pgmLength)
 {
     static char binaryLights[9] = "00000000";    
     LightShowCommand lsCmd;
     char buf[1024];
- 
+    
     if (!GetFilePath(buf,sizeof(buf),"sequence.txt"))
     {
         ESP_LOGE(TAG, "Failed to get path to sequence file");
@@ -342,6 +362,11 @@ esp_err_t LoadCommands()
         return ESP_FAIL;
     }
 
+    int maxProgramLength = GetMaxPgmLength(seqFile);
+    LightShowCommand* lightshowPgm = new LightShowCommand[maxProgramLength];
+    int lastPgmIndex = -1;          // Empty
+
+
     int lineNo = 0;
     while (fgets(buf, sizeof(buf), seqFile) != NULL)
     {
@@ -353,6 +378,9 @@ esp_err_t LoadCommands()
         if (NormalizeLine(buf) &&
             ParseSequenceLine(buf, &lsCmd)) 
         {
+            ++lastPgmIndex;
+            memcpy(&lightshowPgm[lastPgmIndex], &lsCmd, sizeof(lightshowPgm[0]));
+
             switch (lsCmd.stepType)
             {
             case Light:
@@ -383,6 +411,9 @@ esp_err_t LoadCommands()
             }
         }
     }
+
+    *rawLightShowPgm = (void*)lightshowPgm;
+    *pgmLength = lastPgmIndex + 1;
 
     fclose(seqFile);
     return ESP_OK;

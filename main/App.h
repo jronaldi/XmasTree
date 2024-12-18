@@ -59,7 +59,8 @@ extern "C" {
 
     void SetErrorLed(bool on);
 
-    esp_err_t LoadCommands();
+    esp_err_t LoadCommands(void** lightshow, int* pgmLength);
+    esp_err_t RunLightshow(void** lightshow, int pgmLength);
     
 #ifdef __cplusplus
 };

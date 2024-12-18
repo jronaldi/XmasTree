@@ -33,17 +33,24 @@ void SetErrorLed(bool on)
 
 void app_main(void)
 {
+    void* lightshow = NULL;
+    int pgmLength = 0;
     esp_err_t ret;
 
     InitializeSdCard();
 
     // SetErrorLed(true);
-    ret = LoadCommands();
+    ret = LoadCommands(&lightshow, &pgmLength);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Failed to open 'sequence.txt' file to control the lights.");
         return;
     }
 
+    ret = RunLightshow(&lightshow, pgmLength);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to execute the lightshow program.");
+        return;
+    }
 
     DeinitializeSdCard();
     //esp_light_sleep_start();
