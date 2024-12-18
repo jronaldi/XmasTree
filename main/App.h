@@ -12,6 +12,8 @@
 #define PIN_NUM_CLK   CONFIG_EXAMPLE_PIN_CLK
 #define PIN_NUM_CS    CONFIG_EXAMPLE_PIN_CS
 
+#define MAX_LABELID   99  // Maximum ID of labels (1..MAX_LABELID)
+
 static const char *TAG = TAG_NAME;
 
 enum LightShowCmdType {
@@ -36,15 +38,14 @@ struct LightShowCommand {
             unsigned red;           // Luminosity (0-100%) of the red light.
             unsigned green;         // Luminosity (0-100%) of the green light.
             unsigned blue;          // Luminosity (0-100%) of the blue light.
-            unsigned delay;         // Delay before moving to the next step.
+            unsigned delayMs;       // Delay before moving to the next step.
         } LightStep;
         struct {
             unsigned idLabel;
         } Label;
         struct {
-            unsigned idLabel;       // ID of label where to loop to.
+            unsigned idLabel;       // ID of label where to loop to. Start at 0.
             unsigned count;         // Number of times to loop.
-            unsigned countdown;     // Looping countdown (remaining count).
         } Loop;
         struct {
             unsigned delayMs;
@@ -59,8 +60,10 @@ extern "C" {
 
     void SetErrorLed(bool on);
 
+    const char *GetBinaryLights(unsigned lights, char buf[8]);
+
     esp_err_t LoadCommands(void** lightshow, int* pgmLength);
-    esp_err_t RunLightshow(void** lightshow, int pgmLength);
+    esp_err_t RunLightshow(void* lightshow, int pgmLength);
     
 #ifdef __cplusplus
 };

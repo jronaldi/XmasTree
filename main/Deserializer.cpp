@@ -199,7 +199,13 @@ bool ParseSequenceLine(const char* line, LightShowCommand* lsCmd)
             break;
         case LookupLabel:
             pCurChar = GetInteger(pCurChar, &label);
-            state = ParsedLabel;
+            if (label >= 1 && label <= MAX_LABELID) {
+                state = ParsedLabel;
+            }
+            else {
+                ESP_LOGE(TAG, "Label ID out of range [1..%d] (%d)", MAX_LABELID, label);
+                state = Error;
+            }
             break;
         case LookupLoop:
             if (*pCurChar == LabelMarker) {
@@ -278,19 +284,18 @@ bool ParseSequenceLine(const char* line, LightShowCommand* lsCmd)
             lsCmd->LightStep.red = MapLightBrightnessRange(red);
             lsCmd->LightStep.green = MapLightBrightnessRange(green);
             lsCmd->LightStep.blue = MapLightBrightnessRange(blue);
-            lsCmd->LightStep.delay = delay;
+            lsCmd->LightStep.delayMs = delay;
             state = Success;
             break;
         case ParsedLabel:
             lsCmd->stepType = Label;
-            lsCmd->Label.idLabel = label;
+            lsCmd->Label.idLabel = label-1; // Begins at 0 internally
             state = Success;
             break;
         case ParsedLoop:
             lsCmd->stepType = Loop;
-            lsCmd->Loop.idLabel = label;
+            lsCmd->Loop.idLabel = label-1;  // Begins at 0 internally
             lsCmd->Loop.count = repeat;
-            lsCmd->Loop.countdown = repeat;
             state = Success;
             break;
         case ParsedWait:
@@ -387,15 +392,15 @@ esp_err_t LoadCommands(void** rawLightShowPgm, int* pgmLength)
                 printf("%04d: LIGHTS(%s) RGB(%u,%u,%u) D=%ums\n", lineNo,
                     GetBinaryLights(lsCmd.LightStep.lightRows, binaryLights),
                     lsCmd.LightStep.red, lsCmd.LightStep.green, lsCmd.LightStep.blue,
-                    lsCmd.LightStep.delay);
+                    lsCmd.LightStep.delayMs);
                 break;
             case Label:
                 printf("%04d: LABEL :%d\n", lineNo,
-                    lsCmd.Label.idLabel);
+                    lsCmd.Label.idLabel+1);
                 break;
             case Loop:
                 printf("%04d: LOOP :%d * %d times\n", lineNo,
-                    lsCmd.Loop.idLabel,
+                    lsCmd.Loop.idLabel+1,
                     lsCmd.Loop.count);
                 break;
             case Wait:

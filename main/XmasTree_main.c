@@ -37,16 +37,20 @@ void app_main(void)
     int pgmLength = 0;
     esp_err_t ret;
 
+    printf("XMASTREE 1.0 2024-12-17\n");
+
     InitializeSdCard();
 
     // SetErrorLed(true);
+    printf("Loading lightshow sequence...\n");
     ret = LoadCommands(&lightshow, &pgmLength);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Failed to open 'sequence.txt' file to control the lights.");
         return;
     }
 
-    ret = RunLightshow(&lightshow, pgmLength);
+    printf("Running lightshow...\n");
+    ret = RunLightshow(lightshow, pgmLength);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Failed to execute the lightshow program.");
         return;
@@ -54,5 +58,7 @@ void app_main(void)
 
     DeinitializeSdCard();
     //esp_light_sleep_start();
+
+    printf("Execution stopped.\n");
     while (true) ;
 }
