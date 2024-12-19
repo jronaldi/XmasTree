@@ -10,6 +10,9 @@
 #include <freertos/freertos.h>
 #include <freertos/task.h>
 #include <freertos/projdefs.h>
+#include "led_indicator.h"
+#include "sdkconfig.h"
+#include "driver/gpio.h"
 //#include <regex>
 #include "App.h"
 #include "SdCard.h"
@@ -56,12 +59,76 @@ void TraceCurrentStep(int lineNo, LightShowCommand* lsCmd)
 #endif
 }
 
+#define XTREE_COLOR_INDEX_R   0
+#define XTREE_COLOR_INDEX_G   1
+#define XTREE_COLOR_INDEX_B   2
+
+#define XTREE_REGISTER_LOAD_TRIGGER     0   // Registers follow inputs
+#define XTREE_REGISTER_LOAD_NOTRIGGER   1   // Registers latched and isolated from inputs
+
+//TEMPORARY///////////////////////////////////////////////////
+static gpio_num_t xtreeLevels[XTREE_LEVELS] = {
+    (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL1,
+    (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL2,
+    (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL3,
+    (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL4,
+    (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL5,
+    (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL6,
+    (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL7,
+    (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL8
+};
+
+static gpio_num_t xtreeColors[XTREE_COLOR_GPIOS] = {
+    (gpio_num_t)CONFIG_XTREE_GPIO_RED,
+    (gpio_num_t)CONFIG_XTREE_GPIO_GREEN,
+    (gpio_num_t)CONFIG_XTREE_GPIO_BLUE,
+};
+
+void TriggerRegisterLoading()
+{
+    gpio_set_level((gpio_num_t)CONFIG_XTREE_GPIO_LOADREG, XTREE_REGISTER_LOAD_TRIGGER);
+    gpio_set_level((gpio_num_t)CONFIG_XTREE_GPIO_LOADREG, XTREE_REGISTER_LOAD_NOTRIGGER);
+}
+
+void SetLights(LightShowCommand* pgmStep)
+{
+    unsigned lights = (pgmStep->LightStep.lightRows);
+    unsigned mask = 0x01;
+    for (int i=0; i<XTREE_LEVELS; ++i) {
+        gpio_set_level(xtreeLevels[i], (lights&mask)?1:0);
+        mask <<= 1;
+    }
+}
+
 esp_err_t RunLightshow(void* lightShowPtr, int pgmLength)
 {
     LightShowCommand* lightShowPgm = (LightShowCommand*)lightShowPtr;
     LightShowCommand* pgmStep = NULL;
 
     printf("RunLightshow received %d-steps program.\n", pgmLength);
+
+
+    //TEMPORARY///////////////////////////////////////////////////
+    for (int i=0; i<XTREE_LEVELS; ++i) {
+        printf("Config: LEVEL%d GPIO%d OUTPUT 0\n", i, xtreeLevels[i]);
+        gpio_set_direction(xtreeLevels[i], GPIO_MODE_OUTPUT);
+        gpio_set_level(xtreeLevels[i], 0);
+    }
+    for (int i=0; i<XTREE_COLOR_GPIOS; ++i) {
+        printf("Config: COLOR%d GPIO%d OUTPUT 1\n", i, xtreeColors[i]);
+        gpio_set_direction(xtreeColors[i], GPIO_MODE_OUTPUT);
+        gpio_set_level(xtreeColors[i], 1);
+    }
+    // Initialize REGISTER-LOAD triggering GPIO and set 'NOLOAD'.
+    // This must be called AFTER all REGISTER GPIOs have been initialized.
+    gpio_set_direction((gpio_num_t)CONFIG_XTREE_GPIO_LOADREG, GPIO_MODE_OUTPUT);
+    TriggerRegisterLoading();
+    //TEMPORARY///////////////////////////////////////////////////
+
+
+
+
+
 
     int labelIndex[MAX_LABELID];
     for (int i=0; i<MAX_LABELID; ++i) labelIndex[i] = 0;
@@ -96,6 +163,12 @@ NextStep:
     switch (pgmStep->stepType) {
     case Light:
         // Execute lighting step
+        
+        //TEMPORARY///////////////////////////////////////////////////
+        SetLights(pgmStep);
+        //TEMPORARY///////////////////////////////////////////////////
+
+
         // Wait specified time
         if (pgmStep->LightStep.delayMs != 0) {
             vTaskDelay(pdMS_TO_TICKS(pgmStep->LightStep.delayMs));

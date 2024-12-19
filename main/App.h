@@ -12,7 +12,9 @@
 #define PIN_NUM_CLK   CONFIG_EXAMPLE_PIN_CLK
 #define PIN_NUM_CS    CONFIG_EXAMPLE_PIN_CS
 
-#define MAX_LABELID   99  // Maximum ID of labels (1..MAX_LABELID)
+#define XTREE_LEVELS        8     // How many levels on the tree?
+#define XTREE_COLOR_GPIOS   3     // The number of GPIOs for colors
+#define MAX_LABELID         99    // Maximum ID of labels (1..MAX_LABELID)
 
 static const char *TAG = TAG_NAME;
 
