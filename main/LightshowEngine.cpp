@@ -19,6 +19,19 @@
 
 using namespace std;
 
+#define XTREE_GPIO_LOADREG      (gpio_num_t)CONFIG_XTREE_GPIO_LOADREG //27
+#define XTREE_GPIO_RED          (gpio_num_t)CONFIG_XTREE_GPIO_RED //17
+#define XTREE_GPIO_GREEN        (gpio_num_t)CONFIG_XTREE_GPIO_GREEN //?
+#define XTREE_GPIO_BLUE         (gpio_num_t)CONFIG_XTREE_GPIO_BLUE //?
+#define XTREE_GPIO_LEVEL1       (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL1 //26
+#define XTREE_GPIO_LEVEL2       (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL2 //25
+#define XTREE_GPIO_LEVEL3       (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL3 //33
+#define XTREE_GPIO_LEVEL4       (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL4 //32
+#define XTREE_GPIO_LEVEL5       (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL5 //0
+#define XTREE_GPIO_LEVEL6       (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL6 //16
+#define XTREE_GPIO_LEVEL7       (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL7 //4
+#define XTREE_GPIO_LEVEL8       (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL8 //22
+
 
 void TraceCurrentStep(int lineNo, LightShowCommand* lsCmd)
 {
@@ -59,45 +72,59 @@ void TraceCurrentStep(int lineNo, LightShowCommand* lsCmd)
 #endif
 }
 
-#define XTREE_COLOR_INDEX_R   0
-#define XTREE_COLOR_INDEX_G   1
-#define XTREE_COLOR_INDEX_B   2
+#define XTREE_COLOR_INDEX_R     0
+#define XTREE_COLOR_INDEX_G     1
+#define XTREE_COLOR_INDEX_B     2
 
-#define XTREE_REGISTER_LOAD_TRIGGER     0   // Registers follow inputs
-#define XTREE_REGISTER_LOAD_NOTRIGGER   1   // Registers latched and isolated from inputs
+#define XTREE_REGISTER_FOLLOW   1   // Registers follow inputs
+#define XTREE_REGISTER_LATCH    0   // Registers latched and isolated from inputs
+
+#define GPIO_HIGH               1   // VCC
+#define GPIO_LOW                0   // GND
+
+#define XTREE_LEVELS        8     // How many levels on the tree?
+#define XTREE_COLOR_GPIOS   1     // The number of GPIOs for colors
 
 //TEMPORARY///////////////////////////////////////////////////
 static gpio_num_t xtreeLevels[XTREE_LEVELS] = {
-    (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL1,
-    (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL2,
-    (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL3,
-    (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL4,
-    (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL5,
-    (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL6,
-    (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL7,
-    (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL8
+    XTREE_GPIO_LEVEL1,
+    XTREE_GPIO_LEVEL2,
+    XTREE_GPIO_LEVEL3,
+    XTREE_GPIO_LEVEL4,
+    XTREE_GPIO_LEVEL5,
+    XTREE_GPIO_LEVEL6,
+    XTREE_GPIO_LEVEL7,
+    XTREE_GPIO_LEVEL8
 };
 
 static gpio_num_t xtreeColors[XTREE_COLOR_GPIOS] = {
-    (gpio_num_t)CONFIG_XTREE_GPIO_RED,
-    (gpio_num_t)CONFIG_XTREE_GPIO_GREEN,
-    (gpio_num_t)CONFIG_XTREE_GPIO_BLUE,
+    XTREE_GPIO_RED,
+    //XTREE_GPIO_GREEN,
+    // XTREE_GPIO_BLUE,
 };
 
 void TriggerRegisterLoading()
 {
-    gpio_set_level((gpio_num_t)CONFIG_XTREE_GPIO_LOADREG, XTREE_REGISTER_LOAD_TRIGGER);
-    gpio_set_level((gpio_num_t)CONFIG_XTREE_GPIO_LOADREG, XTREE_REGISTER_LOAD_NOTRIGGER);
+    gpio_set_level((gpio_num_t)XTREE_GPIO_LOADREG, XTREE_REGISTER_FOLLOW);
+    //vTaskDelay(pdMS_TO_TICKS(100));
+    gpio_set_level((gpio_num_t)XTREE_GPIO_LOADREG, XTREE_REGISTER_LATCH);
 }
 
 void SetLights(LightShowCommand* pgmStep)
 {
     unsigned lights = (pgmStep->LightStep.lightRows);
-    unsigned mask = 0x01;
+    unsigned mask = 0x80;
     for (int i=0; i<XTREE_LEVELS; ++i) {
         gpio_set_level(xtreeLevels[i], (lights&mask)?1:0);
-        mask <<= 1;
+        mask >>= 1;
     }
+
+    printf("Config: R%d G%d B%d\n", (pgmStep->LightStep.red)?GPIO_LOW:GPIO_HIGH, 
+        (pgmStep->LightStep.green)?GPIO_LOW:GPIO_HIGH, 
+        (pgmStep->LightStep.blue)?GPIO_LOW:GPIO_HIGH);
+    gpio_set_level(xtreeColors[XTREE_COLOR_INDEX_R], (pgmStep->LightStep.red)?GPIO_LOW:GPIO_HIGH);
+    gpio_set_level(xtreeColors[XTREE_COLOR_INDEX_G], (pgmStep->LightStep.green)?GPIO_LOW:GPIO_HIGH);
+    gpio_set_level(xtreeColors[XTREE_COLOR_INDEX_B], (pgmStep->LightStep.blue)?GPIO_LOW:GPIO_HIGH);
 }
 
 esp_err_t RunLightshow(void* lightShowPtr, int pgmLength)
@@ -110,21 +137,22 @@ esp_err_t RunLightshow(void* lightShowPtr, int pgmLength)
 
     //TEMPORARY///////////////////////////////////////////////////
     for (int i=0; i<XTREE_LEVELS; ++i) {
-        printf("Config: LEVEL%d GPIO%d OUTPUT 0\n", i, xtreeLevels[i]);
+        printf("Config: LEVEL%d GPIO%d OUTPUT %d\n", i, xtreeLevels[i], GPIO_HIGH);
         gpio_set_direction(xtreeLevels[i], GPIO_MODE_OUTPUT);
-        gpio_set_level(xtreeLevels[i], 0);
+        gpio_set_level(xtreeLevels[i], GPIO_HIGH);
     }
     for (int i=0; i<XTREE_COLOR_GPIOS; ++i) {
-        printf("Config: COLOR%d GPIO%d OUTPUT 1\n", i, xtreeColors[i]);
+        printf("Config: COLOR%d GPIO%d OUTPUT %d\n", i, xtreeColors[i], GPIO_LOW);
         gpio_set_direction(xtreeColors[i], GPIO_MODE_OUTPUT);
-        gpio_set_level(xtreeColors[i], 1);
+        gpio_set_level(xtreeColors[i], GPIO_LOW);
     }
     // Initialize REGISTER-LOAD triggering GPIO and set 'NOLOAD'.
     // This must be called AFTER all REGISTER GPIOs have been initialized.
-    gpio_set_direction((gpio_num_t)CONFIG_XTREE_GPIO_LOADREG, GPIO_MODE_OUTPUT);
+    printf("Config: LATCH GPIO%d OUTPUT %d\n", XTREE_GPIO_LOADREG, GPIO_HIGH);
+    gpio_set_direction((gpio_num_t)XTREE_GPIO_LOADREG, GPIO_MODE_OUTPUT);
+    vTaskDelay(pdMS_TO_TICKS(1000));
     TriggerRegisterLoading();
     //TEMPORARY///////////////////////////////////////////////////
-
 
 
 
@@ -163,11 +191,8 @@ NextStep:
     switch (pgmStep->stepType) {
     case Light:
         // Execute lighting step
-        
-        //TEMPORARY///////////////////////////////////////////////////
         SetLights(pgmStep);
-        //TEMPORARY///////////////////////////////////////////////////
-
+        TriggerRegisterLoading();
 
         // Wait specified time
         if (pgmStep->LightStep.delayMs != 0) {
@@ -186,7 +211,7 @@ NextStep:
             --loopCounter[pgmIndex];
             pgmIndex = labelIndex[pgmStep->Loop.idLabel];
         }
-        else if (loopCounter[pgmIndex] == 0) {
+        else if (loopCounter[pgmIndex] <= 0) {
             loopCounter[pgmIndex] = -1;
             ++pgmIndex;     // Loop ended: advance to next step
         }

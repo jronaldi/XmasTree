@@ -389,22 +389,22 @@ esp_err_t LoadCommands(void** rawLightShowPgm, int* pgmLength)
             switch (lsCmd.stepType)
             {
             case Light:
-                printf("%04d: LIGHTS(%s) RGB(%u,%u,%u) D=%ums\n", lineNo,
+                printf("%04d: LIGHTS(%s) RGB(%u,%u,%u) D=%ums\n", lastPgmIndex,
                     GetBinaryLights(lsCmd.LightStep.lightRows, binaryLights),
                     lsCmd.LightStep.red, lsCmd.LightStep.green, lsCmd.LightStep.blue,
                     lsCmd.LightStep.delayMs);
                 break;
             case Label:
-                printf("%04d: LABEL :%d\n", lineNo,
+                printf("%04d: LABEL :%d\n", lastPgmIndex,
                     lsCmd.Label.idLabel+1);
                 break;
             case Loop:
-                printf("%04d: LOOP :%d * %d times\n", lineNo,
+                printf("%04d: LOOP :%d * %d times\n", lastPgmIndex,
                     lsCmd.Loop.idLabel+1,
                     lsCmd.Loop.count);
                 break;
             case Wait:
-                printf("%04d: WAIT %dms\n", lineNo,
+                printf("%04d: WAIT %dms\n", lastPgmIndex,
                     lsCmd.Wait.delayMs);
                 break;
             case Stop:

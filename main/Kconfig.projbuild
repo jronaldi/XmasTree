@@ -48,13 +48,13 @@ menu "XmasTree Configuration"
         int "PIN controlling the REGISTER load"
         help
             Pin that controls the LOAD signal of the RGB and LEVELS registers.
-        default 35
+        default 27
        
     config XTREE_GPIO_RED
         int "PIN controlling the RED component"
         help
             Pin that defines the RED component for all LEDs.
-        default 12
+        default 17
 
     config XTREE_GPIO_GREEN
         int "PIN controlling the GREEN component"
@@ -96,13 +96,13 @@ menu "XmasTree Configuration"
         int "PIN controlling LED row LEVEL 5"
         help
             Pin that defines the GPIO that powers all LEDs on level 5.
-        default 13
+        default 0
 
     config XTREE_GPIO_LEVEL6
         int "PIN controlling LED row LEVEL 6"
         help
             Pin that defines the GPIO that powers all LEDs on level 6.
-        default 15
+        default 16
 
     config XTREE_GPIO_LEVEL7
         int "PIN controlling LED row LEVEL 7"
