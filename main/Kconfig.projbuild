@@ -60,13 +60,13 @@ menu "XmasTree Configuration"
         int "PIN controlling the GREEN component"
         help
             Pin that defines the GREEN component for all LEDs.
-        default 14
+        default 21
     
     config XTREE_GPIO_BLUE
         int "PIN controlling the BLUE component"
         help
             Pin that defines the BLUE component for all LEDs.
-        default 27
+        default 14
 
     config XTREE_GPIO_LEVEL1
         int "PIN controlling LED row LEVEL 1"

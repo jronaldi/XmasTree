@@ -19,10 +19,11 @@
 
 using namespace std;
 
+// Other GPIOs used by the external xSD card reader: 19, 23, 18, 5.
 #define XTREE_GPIO_LOADREG      (gpio_num_t)CONFIG_XTREE_GPIO_LOADREG //27
 #define XTREE_GPIO_RED          (gpio_num_t)CONFIG_XTREE_GPIO_RED //17
-#define XTREE_GPIO_GREEN        (gpio_num_t)CONFIG_XTREE_GPIO_GREEN //?
-#define XTREE_GPIO_BLUE         (gpio_num_t)CONFIG_XTREE_GPIO_BLUE //?
+#define XTREE_GPIO_GREEN        (gpio_num_t)CONFIG_XTREE_GPIO_GREEN //21
+#define XTREE_GPIO_BLUE         (gpio_num_t)CONFIG_XTREE_GPIO_BLUE //14
 #define XTREE_GPIO_LEVEL1       (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL1 //26
 #define XTREE_GPIO_LEVEL2       (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL2 //25
 #define XTREE_GPIO_LEVEL3       (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL3 //33
@@ -32,6 +33,8 @@ using namespace std;
 #define XTREE_GPIO_LEVEL7       (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL7 //4
 #define XTREE_GPIO_LEVEL8       (gpio_num_t)CONFIG_XTREE_GPIO_LEVEL8 //22
 
+//Can be  : 0,2,4,5,12,13,14,15,16,21,22,23,25,26,27,32,33
+//Are used: *   * *             ** ** ** ** ** ** ** ** **
 
 void TraceCurrentStep(int lineNo, LightShowCommand* lsCmd)
 {
@@ -83,7 +86,7 @@ void TraceCurrentStep(int lineNo, LightShowCommand* lsCmd)
 #define GPIO_LOW                0   // GND
 
 #define XTREE_LEVELS        8     // How many levels on the tree?
-#define XTREE_COLOR_GPIOS   1     // The number of GPIOs for colors
+#define XTREE_COLOR_GPIOS   3     // The number of GPIOs for colors
 
 //TEMPORARY///////////////////////////////////////////////////
 static gpio_num_t xtreeLevels[XTREE_LEVELS] = {
@@ -99,8 +102,8 @@ static gpio_num_t xtreeLevels[XTREE_LEVELS] = {
 
 static gpio_num_t xtreeColors[XTREE_COLOR_GPIOS] = {
     XTREE_GPIO_RED,
-    //XTREE_GPIO_GREEN,
-    // XTREE_GPIO_BLUE,
+    XTREE_GPIO_GREEN,
+    XTREE_GPIO_BLUE,
 };
 
 void TriggerRegisterLoading()
@@ -141,8 +144,12 @@ esp_err_t RunLightshow(void* lightShowPtr, int pgmLength)
         gpio_set_direction(xtreeLevels[i], GPIO_MODE_OUTPUT);
         gpio_set_level(xtreeLevels[i], GPIO_HIGH);
     }
+    
     for (int i=0; i<XTREE_COLOR_GPIOS; ++i) {
         printf("Config: COLOR%d GPIO%d OUTPUT %d\n", i, xtreeColors[i], GPIO_LOW);
+        if (xtreeColors[i] >= 12 && xtreeColors[i] <= 15) {
+            gpio_reset_pin(xtreeColors[i]);
+        }
         gpio_set_direction(xtreeColors[i], GPIO_MODE_OUTPUT);
         gpio_set_level(xtreeColors[i], GPIO_LOW);
     }
